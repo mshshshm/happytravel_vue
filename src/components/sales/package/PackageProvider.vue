@@ -24,8 +24,8 @@ import { useToast } from 'vue-toast-notification';
 
 const toast = useToast();
 const loginState = JSON.parse(sessionStorage.getItem('vuex-session'));
-const empId = loginState?.loginInfo.empId
-const posCode = loginState?.loginInfo.posCode
+const empId = loginState?.loginInfo.empId;
+const posCode = loginState?.loginInfo.posCode;
 
 const packages = ref([]);
 
@@ -39,6 +39,7 @@ const initialPackageState = {
   isModalOpen: false,
   packageCode: '',
   isEditing: false,
+  isCreating: false,
   crudState: CRUDStateEnum.CREATE,
   packageDetail: {
     flightCountry: undefined,
@@ -155,20 +156,26 @@ const resetFilterState = () => {
   Object.assign(filterState, initialFilterState);
 };
 
-const fetchPackages = async (assignCode = '1000') => {
-  console.log(loginState)
-  console.log(empId)
-  console.log(posCode)
+const fetchPackages = async (assignCode = '1000', packageName = '') => {
   const params = {
     empId,
     assignCode: assignCode,
     limit: paginationState.itemsPerPage,
     offset: paginationState.itemsPerPage * (paginationState.currentPage - 1),
   };
+
+  if (packageName) {
+    params.packageName = packageName;
+  }
+
   try {
     const [data, cnt] = await Promise.all([
       getPackageList(params),
-      getPackageCnt({ empId, assignCode }),
+      getPackageCnt({
+        empId,
+        assignCode,
+        packageName: packageName || undefined,
+      }),
     ]);
     packages.value = data;
     paginationState.packageCnt = cnt;
@@ -247,7 +254,6 @@ const fetchAgencies = async () => {
 const selectRow = (row) => {
   if (partnerState.selectedCategory === 'flight') {
     packageState.packageDetail.flightCode = row.code;
-    console.log(packageState.packageDetail.flightCode);
     return true;
   } else if (partnerState.selectedCategory === 'hotel') {
     packageState.packageDetail.hotelCode = row.code;
@@ -337,7 +343,7 @@ const validateForm = () => {
   ];
 
   for (const field of requiredFields) {
-    if (!packageState.packageDetail[field]) {
+    if (packageState.packageDetail[field] == '' || !packageState.packageDetail[field]) {
       toast.open({
         message: `입력값이 누락되었습니다. 확인해주세요.`,
         type: 'warning',
@@ -379,13 +385,12 @@ const validateForm = () => {
   return true;
 };
 
-const submitForm = async () => {
-  console.log(empId)
+const submitForm = async (assignCode) => {
   try {
     if (!validateForm()) {
       return;
     }
-    
+    console.log(packageState.packageDetail.agencyCode)
     const requestParams = {
       packageCode: packageState.packageDetail.packageCode || null,
       agencyCode: packageState.packageDetail.agencyCode,
@@ -397,8 +402,9 @@ const submitForm = async () => {
       endDate: packageState.packageDetail.endDate,
       saleStartDate: packageState.packageDetail.saleStartDate,
       saleEndDate: packageState.packageDetail.saleEndDate,
+      assignCode: assignCode,
     };
-    console.log({...requestParams})
+
     const params = {
       empId,
       ...requestParams,
@@ -499,7 +505,7 @@ const submitAssign = async (assignCode) => {
 };
 
 provide('empId', empId);
-provide('posCode', posCode)
+provide('posCode', posCode);
 provide('CRUDStateEnum', CRUDStateEnum);
 
 provide('packages', packages);

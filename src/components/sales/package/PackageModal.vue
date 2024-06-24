@@ -3,10 +3,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <div class="modal-header-item">
-          <!-- <img
-            src="@/assets/icons/flight.png"
-            alt="flight image"
-            loading="lazy" /> -->
+          <img src="@/assets/icons/flight.png" alt="package image" width="150" height="150" loading="lazy" />
         </div>
         <h1>{{ title }}</h1>
       </div>
@@ -16,7 +13,7 @@
           <button
             type="button"
             class="btn-delete"
-            v-if="packageState.isEditing"
+            v-if="packageState.isEditing && !packageState.isCreating"
             @click="handleYN()">
             삭제
           </button>
@@ -24,7 +21,7 @@
             type="button"
             class="btn-reject"
             v-if="
-              packageState.isEditing &&
+              (packageState.isEditing && !packageState.isCreating) &&
               packageState.packageDetail.assignCode == '1000'
             "
             @click="handleAssign(assignState.rejected)">
@@ -36,7 +33,7 @@
             type="button"
             class="btn-assingn"
             v-if="
-              packageState.isEditing &&
+              (packageState.isEditing && !packageState.isCreating) &&
               packageState.packageDetail.assignCode == '1000'
             "
             @click="handleAssign(assignState.assigned)">
@@ -90,7 +87,6 @@ const filterState = inject('filterState');
 const resetFilterState = inject('resetFilterState');
 
 const toggleEditing = async () => {
-  console.log(posCode)
   const countryData = await getCountries();
   packageState.crudState = CRUDStateEnum.UPDATE;
   packageState.countries = countryData;
@@ -102,7 +98,7 @@ const handleYN = async () => {
 };
 
 const handleSave = async (value) => {
-  await submitForm();
+  await submitForm(value);
   if (value === assignState.waited) {
     resetFilterState();
     filterState.waited = true;
@@ -110,7 +106,7 @@ const handleSave = async (value) => {
 };
 
 const handleAssign = async (value) => {
-  if (value) console.log(value);
+  if (value) 
   await submitAssign(value);
 
   if (value === assignState.assigned) {
@@ -123,7 +119,6 @@ const handleAssign = async (value) => {
 };
 
 const handleClose = () => {
-  console.log(posCode)
   resetAllState();
 };
 
@@ -197,7 +192,7 @@ onUnmounted(() => {
   border-radius: 4px 0px 0px 0px;
   img {
     object-fit: contain;
-    height: 70%;
+    height: 80%;
     width: auto;
   }
 }
